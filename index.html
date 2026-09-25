@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PovPlayServer</title>
     <style>
-        /* 基础重置与浅色背景 */
+        /* 基础重置 */
         * {
             margin: 0;
             padding: 0;
@@ -13,179 +13,167 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background-color: #f0f4f8; /* 浅灰蓝底色 */
-            color: #333333;
+            width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #000; /* 图片加载前的黑底 */
             user-select: none;
         }
 
-        /* 顶部导航栏 */
-        header {
-            height: 70px;
-            background-color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* 柔和的阴影 */
-            z-index: 10;
-        }
-
-        .server-name {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a73e8; /* 经典 Google 蓝 */
-            letter-spacing: 1px;
-        }
-
-        .clock-container {
-            font-size: 22px;
-            font-weight: 600;
-            color: #555555;
-            background-color: #f1f3f4;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* 主体图片展示区 */
-        main {
-            flex: 1;
-            padding: 30px 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .image-card {
-            width: 100%;
-            height: 100%;
-            max-width: 1400px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* 随机图片样式 */
-        #random-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* 铺满容器，保持比例 */
-            transition: opacity 1s ease-in-out; /* 1秒淡入淡出 */
-            opacity: 1;
-        }
-
-        /* 图片加载时的占位颜色 */
-        .image-placeholder {
+        /* 全屏随机背景图 */
+        #bg-image {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #e2e8f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            color: #94a3b8;
-            z-index: -1;
+            object-fit: cover; /* 保证填满屏幕不变形 */
+            z-index: 1;
+            transition: opacity 1.5s ease-in-out; /* 1.5秒平滑过渡 */
+            opacity: 1;
         }
 
-        /* 底部信息栏 */
-        footer {
-            height: 80px;
-            background-color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-            font-size: 18px;
-            color: #666666;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+        /* 渐变遮罩层：确保文字在浅色或复杂图片上也能看清 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            z-index: 2;
         }
 
-        .group-number {
+        /* 右上角时间 */
+        .clock-container {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 22px;
             font-weight: 600;
-            color: #1a73e8;
-            background-color: #e8f0fe;
-            padding: 10px 24px;
-            border-radius: 12px;
+            letter-spacing: 1px;
+            z-index: 3;
+            backdrop-filter: blur(4px);
+            font-variant-numeric: tabular-nums;
         }
 
-        /* 动画定义 */
-        @keyframes fadeInOut {
-            0% { opacity: 1; }
-            45% { opacity: 1; }
-            55% { opacity: 0; }
-            100% { opacity: 0; }
+        /* 正中央的文字区域 */
+        .center-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 3;
+            width: 100%;
+        }
+
+        /* 服务器名字 */
+        .server-name {
+            font-size: 64px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 4px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.9);
+            margin-bottom: 15px;
+            animation: fadeInDown 1.5s ease-out;
+        }
+
+        /* 群号胶囊 */
+        .group-number {
+            display: inline-block;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+            animation: fadeInUp 1.5s ease-out;
+        }
+
+        /* 右下角水印 (根据要求：黑色小字) */
+        .watermark {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 14px;
+            color: #000000; /* 黑色字 */
+            font-weight: bold;
+            z-index: 3;
+            /* 加白色半透明背景和文字阴影，确保在深色图片上也能看到黑色字 */
+            background-color: rgba(255, 255, 255, 0.6);
+            padding: 4px 12px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 简单的入场动画 */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <!-- 顶部导航 -->
-    <header>
+    <!-- 随机背景图 -->
+    <img id="bg-image" src="" alt="背景">
+    
+    <!-- 遮罩层 -->
+    <div class="overlay"></div>
+
+    <!-- 右上角时间 -->
+    <div class="clock-container" id="clock">00:00:00</div>
+
+    <!-- 居中文字 -->
+    <div class="center-content">
         <div class="server-name">PovPlayServer</div>
-        <div class="clock-container" id="clock">00:00:00</div>
-    </header>
-
-    <!-- 图片展示区 -->
-    <main>
-        <div class="image-card">
-            <div class="image-placeholder">图片加载中...</div>
-            <img id="random-image" src="" alt="随机图片">
-        </div>
-    </main>
-
-    <!-- 底部信息 -->
-    <footer>
         <div class="group-number">服务器群号: 732101489</div>
-        <div>图片随机获取, 来源于网络</div>
-    </footer>
+    </div>
 
-    <!-- 功能脚本 -->
+    <!-- 右下角版权声明 -->
+    <div class="watermark">* 图片为网络随机获取,并不是自己上传！</div>
+
     <script>
-        // 1. 时间显示
+        // 1. 实时时间显示
         function updateTime() {
-            var now = new Date();
-            var h = String(now.getHours()).padStart(2, '0');
-            var m = String(now.getMinutes()).padStart(2, '0');
-            var s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
         }
         setInterval(updateTime, 1000);
         updateTime();
 
-        // 2. 随机图片轮播逻辑
-        var imgElement = document.getElementById('random-image');
-        var imageTimer;
+        // 2. 全屏随机图片轮播
+        const imgElement = document.getElementById('bg-image');
 
         function loadRandomImage() {
-            // 使用 Picsum 免费随机图片 API，加上随机参数防止浏览器缓存
-            var randomUrl = 'https://picsum.photos/1920/1080?random=' + Math.random();
+            // 请求 1920x1080 的随机图片
+            const randomUrl = 'https://picsum.photos/1920/1080?random=' + Math.random();
             
-            // 创建一个临时的 Image 对象来预加载图片
-            var tempImg = new Image();
+            const tempImg = new Image();
             tempImg.onload = function() {
-                // 图片加载成功后，淡出效果
+                // 等新图片完全加载后，淡出当前图片
                 imgElement.style.opacity = 0;
                 
-                setTimeout(function() {
+                // 1.5秒后（完全淡出），替换src并淡入
+                setTimeout(() => {
                     imgElement.src = randomUrl;
-                    imgElement.style.opacity = 1; // 淡入
-                }, 1000); // 1秒的过渡时间
-            };
-            tempImg.onerror = function() {
-                // 如果图片加载失败（比如网络问题），显示占位图或重试
-                console.log('图片加载失败，正在重试...');
+                    imgElement.style.opacity = 1;
+                }, 1500); 
             };
             tempImg.src = randomUrl;
         }
@@ -193,8 +181,8 @@
         // 首次加载
         loadRandomImage();
 
-        // 每隔 10 秒更换一次图片 (10000 毫秒)
-        setInterval(loadRandomImage, 10000);
+        // 每 15 秒换一张图（10000毫秒 = 10秒，15000毫秒 = 15秒，根据自己喜好调整）
+        setInterval(loadRandomImage, 15000);
     </script>
 </body>
 </html>
