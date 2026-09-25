@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PovPlayServer</title>
+    <style>
+        /* 基础重置与浅色背景 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f0f4f8; /* 浅灰蓝底色 */
+            color: #333333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 顶部导航栏 */
+        header {
+            height: 70px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* 柔和的阴影 */
+            z-index: 10;
+        }
+
+        .server-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a73e8; /* 经典 Google 蓝 */
+            letter-spacing: 1px;
+        }
+
+        .clock-container {
+            font-size: 22px;
+            font-weight: 600;
+            color: #555555;
+            background-color: #f1f3f4;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 主体图片展示区 */
+        main {
+            flex: 1;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-card {
+            width: 100%;
+            height: 100%;
+            max-width: 1400px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 随机图片样式 */
+        #random-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 铺满容器，保持比例 */
+            transition: opacity 1s ease-in-out; /* 1秒淡入淡出 */
+            opacity: 1;
+        }
+
+        /* 图片加载时的占位颜色 */
+        .image-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: #94a3b8;
+            z-index: -1;
+        }
+
+        /* 底部信息栏 */
+        footer {
+            height: 80px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            font-size: 18px;
+            color: #666666;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .group-number {
+            font-weight: 600;
+            color: #1a73e8;
+            background-color: #e8f0fe;
+            padding: 10px 24px;
+            border-radius: 12px;
+        }
+
+        /* 动画定义 */
+        @keyframes fadeInOut {
+            0% { opacity: 1; }
+            45% { opacity: 1; }
+            55% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <header>
+        <div class="server-name">PovPlayServer</div>
+        <div class="clock-container" id="clock">00:00:00</div>
+    </header>
+
+    <!-- 图片展示区 -->
+    <main>
+        <div class="image-card">
+            <div class="image-placeholder">图片加载中...</div>
+            <img id="random-image" src="" alt="随机图片">
+        </div>
+    </main>
+
+    <!-- 底部信息 -->
+    <footer>
+        <div class="group-number">服务器群号: 732101489</div>
+        <div>图片随机获取, 来源于网络</div>
+    </footer>
+
+    <!-- 功能脚本 -->
+    <script>
+        // 1. 时间显示
+        function updateTime() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2, '0');
+            var m = String(now.getMinutes()).padStart(2, '0');
+            var s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 2. 随机图片轮播逻辑
+        var imgElement = document.getElementById('random-image');
+        var imageTimer;
+
+        function loadRandomImage() {
+            // 使用 Picsum 免费随机图片 API，加上随机参数防止浏览器缓存
+            var randomUrl = 'https://picsum.photos/1920/1080?random=' + Math.random();
+            
+            // 创建一个临时的 Image 对象来预加载图片
+            var tempImg = new Image();
+            tempImg.onload = function() {
+                // 图片加载成功后，淡出效果
+                imgElement.style.opacity = 0;
+                
+                setTimeout(function() {
+                    imgElement.src = randomUrl;
+                    imgElement.style.opacity = 1; // 淡入
+                }, 1000); // 1秒的过渡时间
+            };
+            tempImg.onerror = function() {
+                // 如果图片加载失败（比如网络问题），显示占位图或重试
+                console.log('图片加载失败，正在重试...');
+            };
+            tempImg.src = randomUrl;
+        }
+
+        // 首次加载
+        loadRandomImage();
+
+        // 每隔 10 秒更换一次图片 (10000 毫秒)
+        setInterval(loadRandomImage, 10000);
+    </script>
+</body>
+</html>
